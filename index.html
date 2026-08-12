@@ -283,6 +283,69 @@ function bandFor(value, bands) {
   return bands[bands.length - 1];
 }
 
+/* heat bands → coarse clusters for the headline matrix */
+const HEAT_CLUSTERS = {
+  freezing: "cold", cold: "cold", chilly: "cold",
+  crisp: "crisp", mild: "mild", warm: "warm",
+  hot: "hot", scorching: "hot", soup: "hot"
+};
+
+/* headline matrix: condition × heat-cluster → headline variants.
+   Two people in the same city can get different (equally true) headlines. */
+const HEADLINE_MATRIX = {
+  "cold:clear": ["Freezing clear sky. Beautiful and actively hostile", "The sky is gorgeous and the wind is a traitor"],
+  "cold:partly": ["Cold and the sky is hedging its bets. Bring everything", "Frozen clouds. The sky is rationing its sunshine"],
+  "cold:overcast": ["Cold gray. The sky is a blanket that forgot to be warm"],
+  "cold:fog": ["Cold fog. The world is a secret now", "Frozen fog. Everything is a silhouette and none of it is friendly"],
+  "cold:drizzle": ["Cold drizzle. The sky is being passive-aggressive"],
+  "cold:rain": ["Cold rain. The sky is crying and you can't even warm it up"],
+  "cold:showers": ["Cold showers from above. The sky is a gym teacher"],
+  "cold:snow": ["Snow! The world is rebooting and it's beautiful and freezing", "Fresh snow and a frozen nose. Peak winter cinema"],
+  "cold:thunder": ["Cold thunder. The sky is angry and shivering about it"],
+
+  "crisp:clear": ["Crisp and clear. The sky is showing off its best work", "Golden-hour weather. The sun is doing its portfolio review"],
+  "crisp:partly": ["Crisp with clouds. Autumnal energy, statistically speaking"],
+  "crisp:overcast": ["Crisp gray. Sweater weather, arguably, definitely"],
+  "crisp:fog": ["Crisp fog. Mysterious and slightly damp", "Morning fog, coffee weather. The sky is being atmospheric on purpose"],
+  "crisp:drizzle": ["Crisp drizzle. The sky is testing the water, literally"],
+  "crisp:rain": ["Crisp rain. The sky is going through it, gently"],
+  "crisp:showers": ["Crisp showers. Brief drama, acceptable"],
+  "crisp:snow": ["Crisp snow flurries. The sky is sprinkling powdered sugar"],
+  "crisp:thunder": ["Crisp thunder. Drama with good production value"],
+
+  "mild:clear": ["Mild and clear. The universe apologizes for everything else", "Perfect weather. Suspiciously perfect. The universe is buttering you up"],
+  "mild:partly": ["Mild with clouds. The sky can't decide and it doesn't matter, it's perfect anyway"],
+  "mild:overcast": ["Mild gray. Cozy, like the sky is wearing your hoodie"],
+  "mild:fog": ["Mild fog. The world is on mute but in a nice way"],
+  "mild:drizzle": ["Mild drizzle. The sky is crying politely"],
+  "mild:rain": ["Mild rain. The sky is going through it, but classy about it"],
+  "mild:showers": ["Mild showers. The sky has opinions but they're reasonable"],
+  "mild:snow": ["Mild snow. Unusual. The sky is trying something new"],
+  "mild:thunder": ["Mild thunder. The sky is throwing a tantrum with good posture"],
+
+  "warm:clear": ["Warm and clear. The sun is being suspiciously polite", "Golden hour all afternoon. The sun is showing off and honestly? Fair"],
+  "warm:partly": ["Warm with clouds. Half sun, half shade, fully pleasant, suspicious", "The sky is playing peekaboo with the sun. It's winning"],
+  "warm:overcast": ["Warm and gray. The sky is wearing a sweater in the heat. Bold"],
+  "warm:fog": ["Warm fog. The air has joined a spa retreat"],
+  "warm:drizzle": ["Warm drizzle. The sky is sweating on you"],
+  "warm:rain": ["Warm rain. The sky is going through it and taking you with it"],
+  "warm:showers": ["Warm showers. The sky has no filter today and it's steamy"],
+  "warm:snow": ["Warm snow?? The sky is glitching"],
+  "warm:thunder": ["Warm thunder. The sky is dramatic and humid about it"],
+
+  "hot:clear": ["Hot and clear. The sun has personal beef with you and it's winning", "The air is soup with a garnish of sunburn", "The sun is taking this personally now"],
+  "hot:partly": ["Hot with clouds. The clouds are trying to help. They are failing"],
+  "hot:overcast": ["Hot and gray. The sky is a greenhouse and you're the plant"],
+  "hot:fog": ["Hot fog. The air is soup and it's also invisible. Rude"],
+  "hot:drizzle": ["Hot drizzle. Steamy. The sky is a sauna ceiling"],
+  "hot:rain": ["Hot rain. The sky is crying and the tears are warm. Unforgivable"],
+  "hot:showers": ["Hot showers from the sky. The sky is a broken boiler"],
+  "hot:snow": ["Hot snow?? The sky has lost the plot"],
+  "hot:thunder": ["Hot thunder. The sky is throwing a tantrum in a sauna"]
+};
+
+function pickOne(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
 /* weather: { temp, feels, humidity, wind, code, precip, is_day } */
 function vibeFor(w) {
   const t = bandFor(w.temp, TEMP_BANDS);
@@ -301,11 +364,16 @@ function vibeFor(w) {
                 : (t.heat === "freezing" || t.heat === "cold" || t.heat === "chilly") ? "WHERE SWEATERS ARE MANDATORY"
                 : TAGGED[cond];
 
+  /* headline: matrix combo with a random variant, falling back to the temp-band line */
+  const variants = HEADLINE_MATRIX[HEAT_CLUSTERS[t.heat] + ":" + cond];
+  const headline = variants ? pickOne(variants) : t.vibe;
+
   return {
     palette: palette,
     cond: cond,
     heat: t.heat,
     quote: t.vibe,
+    headline: headline,
     tagline: tagline,
     sky: skyLine,
     wind: wind.line,
@@ -315,13 +383,13 @@ function vibeFor(w) {
   };
 }
 
-/* city chips for quick picks */
+/* city chips: the 5 most populous metro areas on Earth (UN estimates) */
 const QUICK_CITIES = [
-  { name: "Karachi",    lat: 24.86, lon: 67.01 },
-  { name: "Lahore",     lat: 31.55, lon: 74.34 },
-  { name: "Islamabad",  lat: 33.72, lon: 73.06 },
-  { name: "London",     lat: 51.51, lon: -0.13 },
-  { name: "New York",   lat: 40.71, lon: -74.01 }
+  { name: "Tokyo",      lat: 35.68, lon: 139.69 },
+  { name: "Delhi",      lat: 28.61, lon: 77.21 },
+  { name: "Shanghai",   lat: 31.23, lon: 121.47 },
+  { name: "Dhaka",      lat: 23.81, lon: 90.41 },
+  { name: "São Paulo",  lat: -23.55, lon: -46.63 }
 ];
 
 /* ============================================================
@@ -405,7 +473,7 @@ const QUICK_CITIES = [
     const v = item.vibe;
     cityNameEl.textContent = item.city;
     taglineEl.textContent = v.tagline;
-    quoteEl.innerHTML = "It\u2019s \u201c<span class=\"marks\">" + v.quote + "</span>\u201d outside";
+    quoteEl.innerHTML = "It\u2019s \u201c<span class=\"marks\">" + v.headline + "</span>\u201d outside";
     skyLineEl.textContent = v.sky;
     windLineEl.textContent = v.wind;
     humLineEl.textContent = v.humidity;
@@ -461,7 +529,7 @@ const QUICK_CITIES = [
     if (!current) return;
     const v = current.vibe;
     const text = "VIBE REPORT \u2014 " + current.city + "\n====================\n" +
-      "It\u2019s \u201c" + v.quote + "\u201d outside (" + current.city + ")\n" +
+      "It\u2019s \u201c" + v.headline + "\u201d outside (" + current.city + ")\n" +
       "Tagline: " + v.tagline + "\n" +
       "Sky: " + v.sky + "\nWind: " + v.wind + "\nHumidity: " + v.humidity + "\n" +
       "Precip: " + current.w.precip + " mm \u2014 " + v.precip + "\n\n" +
