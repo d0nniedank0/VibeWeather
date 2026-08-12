@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VibeWeather — No Degrees. Only Vibes.</title>
+<meta name="description" content="A weather app that never tells you the temperature. Real weather, translated into vibes. Powered by Open-Meteo, 100% free.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><circle cx=%2232%22 cy=%2232%22 r=%2218%22 fill=%22%23e9a13b%22/><g stroke=%22%23e9a13b%22 stroke-width=%224%22 stroke-linecap=%22round%22><line x1=%2232%22 y1=%226%22 x2=%2232%22 y2=%2212%22/><line x1=%2232%22 y1=%2252%22 x2=%2232%22 y2=%2258%22/><line x1=%226%22 y1=%2232%22 x2=%2212%22 y2=%2232%22/><line x1=%2252%22 y1=%2232%22 x2=%2258%22 y2=%2232%22/><line x1=%2213.9%22 y1=%2213.9%22 x2=%2218.1%22 y2=%2218.1%22/><line x1=%2245.9%22 y1=%2245.9%22 x2=%2250.1%22 y2=%2250.1%22/><line x1=%2213.9%22 y1=%2250.1%22 x2=%2218.1%22 y2=%2245.9%22/><line x1=%2245.9%22 y1=%2218.1%22 x2=%2250.1%22 y2=%2213.9%22/></g></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* palette is set at runtime from live weather */
+    --bg1: #f2a65a;
+    --bg2: #f7d794;
+    --ink: #2b2118;
+    --accent: #b5431f;
+    --muted: rgba(43, 33, 24, 0.62);
+    --display: "Anton", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --type: "Courier Prime", "Courier New", Courier, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; }
+  body {
+    font-family: var(--type);
+    background: linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background 0.8s ease, color 0.8s ease;
+  }
+  a { color: var(--accent); }
+
+  /* ---------- station header ---------- */
+  header.station {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    padding: 14px 22px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .station-name { font-size: 13px; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; }
+  .station-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .search-wrap { display: flex; gap: 6px; }
+  input[type="text"] {
+    font-family: var(--type); font-size: 13px;
+    padding: 9px 12px;
+    background: rgba(255,255,255,0.35);
+    border: 1.5px solid var(--ink);
+    border-radius: 2px;
+    color: var(--ink);
+    min-height: 40px;
+    width: 170px;
+  }
+  input[type="text"]:focus { outline: none; box-shadow: 0 0 0 2px var(--accent); }
+  input[type="text"]::placeholder { color: var(--muted); }
+  button {
+    font-family: var(--type); font-size: 12.5px; letter-spacing: 1px; text-transform: uppercase;
+    font-weight: 700;
+    min-height: 40px; padding: 8px 14px;
+    background: var(--ink); color: var(--bg2);
+    border: 1.5px solid var(--ink); border-radius: 2px;
+    cursor: pointer;
+    transition: opacity 0.12s ease;
+  }
+  button:hover { opacity: 0.82; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button:active { transform: translateY(1px); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    font-size: 11.5px; letter-spacing: 1px;
+    min-height: 34px; padding: 6px 11px;
+    background: transparent;
+    border: 1.5px solid var(--ink);
+    color: var(--ink);
+  }
+  @media (max-width: 700px) {
+    header.station { justify-content: center; text-align: center; }
+    input[type="text"] { width: 100%; }
+  }
+
+  /* ---------- poster ---------- */
+  main.poster {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 40px 24px 30px;
+    max-width: 1000px; margin: 0 auto; width: 100%;
+  }
+  .motif { width: 170px; height: 170px; margin-bottom: 18px; }
+  .motif svg { width: 100%; height: 100%; }
+  .visit {
+    font-family: var(--display);
+    font-size: clamp(52px, 11vw, 128px);
+    line-height: 0.98;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .visit .city { color: var(--accent); }
+  .tagline {
+    margin-top: 12px;
+    font-size: clamp(15px, 2.4vw, 22px);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .quote {
+    margin-top: 26px;
+    font-size: clamp(16px, 2.6vw, 24px);
+    font-style: italic;
+    max-width: 640px;
+    line-height: 1.5;
+  }
+  .quote .marks { color: var(--accent); font-style: normal; font-weight: 700; }
+  .credits {
+    margin-top: 34px;
+    display: flex; gap: 26px; flex-wrap: wrap; justify-content: center;
+    font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--ink);
+    border-top: 2px solid var(--ink);
+    padding-top: 18px;
+    max-width: 760px; width: 100%;
+  }
+  .credits .cr { display: flex; flex-direction: column; gap: 2px; min-width: 130px; }
+  .credits .cr .k { color: var(--muted); font-size: 10px; letter-spacing: 2.5px; }
+  .credits .cr .v { font-weight: 700; }
+  .nerds {
+    margin-top: 20px;
+    font-size: 11.5px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .status { margin-top: 26px; font-size: 15px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
+  .status.err { color: var(--accent); }
+
+  /* ---------- footer ---------- */
+  footer {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    padding: 12px 22px;
+    border-top: 2px solid var(--ink);
+    font-size: 11.5px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--ink);
+  }
+  footer .asof { color: var(--muted); }
+  footer button { min-height: 34px; padding: 6px 12px; font-size: 11px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="station">
+  <div class="station-name">Vibe Weather Service &middot; No degrees. Only vibes.</div>
+  <div class="station-controls">
+    <div class="search-wrap">
+      <input type="text" id="cityInput" placeholder="search a city&hellip;" autocomplete="off">
+      <button id="goBtn" type="button">Go</button>
+      <button id="locateBtn" type="button">&#9673; Locate</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+</header>
+
+<main class="poster">
+  <div class="motif" id="motif"></div>
+  <div class="visit">Visit <span class="city" id="cityName">The Sky</span></div>
+  <div class="tagline" id="tagline">WHERE THE VIBES ARE TRANSLATED</div>
+  <div class="quote" id="quote"></div>
+  <div class="status" id="status" hidden></div>
+  <div class="credits" id="credits" hidden>
+    <div class="cr"><span class="k">Sky</span><span class="v" id="skyLine">&mdash;</span></div>
+    <div class="cr"><span class="k">Wind</span><span class="v" id="windLine">&mdash;</span></div>
+    <div class="cr"><span class="k">Humidity</span><span class="v" id="humLine">&mdash;</span></div>
+    <div class="cr"><span class="k">Precip</span><span class="v" id="precipLine">&mdash;</span></div>
+  </div>
+  <div class="nerds" id="nerds"></div>
+</main>
+
+<footer>
+  <span id="asof" class="asof">AS OF &mdash;</span>
+  <button id="copyBtn" type="button">Copy Vibe</button>
+</footer>
+
+<script>
+"use strict";
+
+/* ============================================================
+   THE VIBE ENGINE — pure functions, zero DOM. Testable in node.
+   ============================================================ */
+
+/* temperature bands (C) → main vibe quote */
+const TEMP_BANDS = [
+  { max: -10,   vibe: "Ice planet origin story. Bring a parka and your will to live", heat: "freezing" },
+  { max: 0,     vibe: "Your face has left the chat. The wind is taking personal notes", heat: "cold" },
+  { max: 8,     vibe: "Wear a big sweater and pretend you're in an indie movie", heat: "chilly" },
+  { max: 15,    vibe: "Jacket weather, but make it existential. A scarf is a personality", heat: "crisp" },
+  { max: 22,    vibe: "Chef's kiss weather. The universe apologizes for everything else", heat: "mild" },
+  { max: 28,    vibe: "Slightly warm but still polite. The sun is being civil, for now", heat: "warm" },
+  { max: 33,    vibe: "The sun has personal beef with you. It's winning", heat: "hot" },
+  { max: 38,    vibe: "Stay inside because the air feels like soup", heat: "scorching" },
+  { max: 999,   vibe: "The devil is doing his laundry. Pray for a breeze", heat: "soup" }
+];
+
+const WIND_BANDS = [
+  { max: 4.9,   line: "The air is holding its breath" },
+  { max: 19,    line: "The wind is doing that thing where it's not helping" },
+  { max: 34,    line: "The wind has opinions and it's sharing them" },
+  { max: 54,    line: "The wind has filed a complaint against the trees" },
+  { max: 999,   line: "The wind is on a journey of self-discovery. You are collateral" }
+];
+
+const HUM_BANDS = [
+  { max: 29,   line: "The air is a dry cracker. Moisturize, coward" },
+  { max: 59,   line: "Humidity is minding its own business" },
+  { max: 84,   line: "The air has joined a union and refuses to move" },
+  { max: 999,  line: "You're not sweating. The air is just water in a trench coat" }
+];
+
+const PRECIP_BANDS = [
+  { max: 0,    line: "The sky is sober" },
+  { max: 1.9,  line: "The sky is crying politely" },
+  { max: 9.9,  line: "The sky is going through it" },
+  { max: 999,  line: "The sky has no filter today" }
+];
+
+/* WMO weather codes → condition category */
+function condFor(code) {
+  if (code === 0) return "clear";
+  if (code <= 2) return "partly";
+  if (code === 3) return "overcast";
+  if (code === 45 || code === 48) return "fog";
+  if (code >= 51 && code <= 57) return "drizzle";
+  if (code >= 61 && code <= 67) return "rain";
+  if (code >= 71 && code <= 77) return "snow";
+  if (code >= 80 && code <= 82) return "showers";
+  if (code >= 85 && code <= 86) return "snow";
+  if (code >= 95) return "thunder";
+  return "partly";
+}
+
+const SKY_LINES = {
+  clear:   { day: "The sky is showing off", night: "The sky is showing off. In the dark. Show-off" },
+  partly:  { day: "The sky can't decide. Valid", night: "The sky can't decide. The stars are judging it" },
+  overcast: "The sky is wearing gray sweatpants",
+  fog:     "The world has been put on mute",
+  drizzle: "The sky is crying politely",
+  rain:    "The sky is going through it",
+  snow:    "The world is getting a soft reboot",
+  showers: "The sky has no filter today",
+  thunder: "The sky is throwing a tantrum and honestly it has every right"
+};
+
+const TAGGED = {
+  clear:   "WHERE THE SKY SHOWS OFF",
+  partly:  "WHERE THE SKY CAN'T DECIDE",
+  overcast: "WHERE GRAY SWEATPANTS ARE FASHION",
+  fog:     "WHERE THE WORLD IS ON MUTE",
+  drizzle: "WHERE UMBRELLAS ARE LIES",
+  rain:    "WHERE UMBRELLAS ARE LIES",
+  showers: "WHERE UMBRELLAS ARE LIES",
+  snow:    "WHERE THE WORLD SOFT-REBOOTS",
+  thunder: "WHERE THE SKY THROWS TANTRUMS"
+};
+
+/* poster palettes + motifs, keyed by condition; heat extremes override */
+const PALETTES = {
+  clear:   { bg1: "#f2a65a", bg2: "#f7d794", ink: "#2b2118", accent: "#b5431f", motif: "sun" },
+  partly:  { bg1: "#7fb3d5", bg2: "#cde3f0", ink: "#22333b", accent: "#e09f3e", motif: "suncloud" },
+  overcast: { bg1: "#8d99ae", bg2: "#b8c0cc", ink: "#2b2d42", accent: "#5c6b73", motif: "cloud" },
+  fog:     { bg1: "#d9d9d2", bg2: "#f2f0e9", ink: "#3a3a38", accent: "#8a8a80", motif: "fog" },
+  drizzle: { bg1: "#5c7a99", bg2: "#9db8d9", ink: "#eef3f8", accent: "#2b3a55", motif: "rain" },
+  rain:    { bg1: "#3d5a80", bg2: "#7ba3c9", ink: "#eef3f8", accent: "#1f2d44", motif: "rain" },
+  showers: { bg1: "#4a6fa5", bg2: "#8db1d6", ink: "#eef3f8", accent: "#2b3a55", motif: "rain" },
+  snow:    { bg1: "#a8c6d8", bg2: "#e3eef5", ink: "#33414d", accent: "#5d8aa8", motif: "snow" },
+  thunder: { bg1: "#2b2d42", bg2: "#4a4e69", ink: "#f4f1de", accent: "#e07a5f", motif: "bolt" },
+  hot:     { bg1: "#c96f4a", bg2: "#e8a87c", ink: "#2f1b12", accent: "#9c3d1e", motif: "sun" },
+  freezing:{ bg1: "#8fb4cc", bg2: "#d4e4f0", ink: "#22303c", accent: "#5d8aa8", motif: "snow" }
+};
+
+function bandFor(value, bands) {
+  for (const b of bands) if (value <= b.max) return b;
+  return bands[bands.length - 1];
+}
+
+/* weather: { temp, feels, humidity, wind, code, precip, is_day } */
+function vibeFor(w) {
+  const t = bandFor(w.temp, TEMP_BANDS);
+  const wind = bandFor(w.wind, WIND_BANDS);
+  const hum = bandFor(w.humidity, HUM_BANDS);
+  const prec = bandFor(w.precip, PRECIP_BANDS);
+  const cond = condFor(w.code);
+
+  const palette = PALETTES[t.heat === "hot" || t.heat === "scorching" || t.heat === "soup" ? "hot"
+                 : t.heat === "freezing" || t.heat === "cold" ? "freezing" : cond];
+
+  const skyLine = typeof SKY_LINES[cond] === "string" ? SKY_LINES[cond]
+                : SKY_LINES[cond][w.is_day ? "day" : "night"];
+
+  const tagline = (t.heat === "hot" || t.heat === "scorching" || t.heat === "soup") ? "WHERE THE AIR IS SOUP"
+                : (t.heat === "freezing" || t.heat === "cold" || t.heat === "chilly") ? "WHERE SWEATERS ARE MANDATORY"
+                : TAGGED[cond];
+
+  return {
+    palette: palette,
+    cond: cond,
+    heat: t.heat,
+    quote: t.vibe,
+    tagline: tagline,
+    sky: skyLine,
+    wind: wind.line,
+    humidity: hum.line,
+    precip: prec.line,
+    nerds: "Actual: " + w.temp + "\u00b0C · Feels like: " + w.feels + "\u00b0C · For the nerds"
+  };
+}
+
+/* city chips for quick picks */
+const QUICK_CITIES = [
+  { name: "Karachi",    lat: 24.86, lon: 67.01 },
+  { name: "Lahore",     lat: 31.55, lon: 74.34 },
+  { name: "Islamabad",  lat: 33.72, lon: 73.06 },
+  { name: "London",     lat: 51.51, lon: -0.13 },
+  { name: "New York",   lat: 40.71, lon: -74.01 }
+];
+
+/* ============================================================
+   UI LAYER
+   ============================================================ */
+
+(function () {
+  if (typeof document === "undefined") return; /* node-safe */
+
+  const MOTIFS = {
+    sun: '<svg viewBox="0 0 120 120" fill="none"><circle cx="60" cy="60" r="26" fill="#ffd166"/><g stroke="#ffd166" stroke-width="7" stroke-linecap="round">' +
+         '<line x1="60" y1="8" x2="60" y2="22"/><line x1="60" y1="98" x2="60" y2="112"/><line x1="8" y1="60" x2="22" y2="60"/><line x1="98" y1="60" x2="112" y2="60"/>' +
+         '<line x1="23" y1="23" x2="33" y2="33"/><line x1="87" y1="87" x2="97" y2="97"/><line x1="23" y1="97" x2="33" y2="87"/><line x1="87" y1="33" x2="97" y2="23"/></g></svg>',
+    moon: '<svg viewBox="0 0 120 120" fill="none"><path d="M78 18a44 44 0 1 0 24 62 36 36 0 0 1-24-62z" fill="#ffd166"/><g fill="#ffd166"><circle cx="24" cy="26" r="2.5"/><circle cx="96" cy="40" r="2"/><circle cx="88" cy="92" r="2.5"/><circle cx="40" cy="102" r="2"/></g></svg>',
+    suncloud: '<svg viewBox="0 0 120 120" fill="none"><circle cx="40" cy="42" r="20" fill="#ffd166"/><g stroke="#ffd166" stroke-width="5" stroke-linecap="round"><line x1="40" y1="10" x2="40" y2="18"/><line x1="15" y1="35" x2="21" y2="39"/><line x1="59" y1="35" x2="65" y2="39"/></g><path d="M30 84h56a14 14 0 0 0 0-28 20 20 0 0 0-38-6 16 16 0 0 0-18 6 13 13 0 0 0 0 28z" fill="#ffffff" opacity="0.92"/></svg>',
+    cloud: '<svg viewBox="0 0 120 120" fill="none"><path d="M30 86h60a16 16 0 0 0 0-32 22 22 0 0 0-42-7 18 18 0 0 0-18 7 15 15 0 0 0 0 32z" fill="#ffffff" opacity="0.92"/></svg>',
+    fog: '<svg viewBox="0 0 120 120" fill="none"><g stroke="#ffffff" stroke-width="10" stroke-linecap="round" opacity="0.9"><line x1="16" y1="40" x2="104" y2="40"/><line x1="30" y1="60" x2="90" y2="60"/><line x1="16" y1="80" x2="104" y2="80"/></g></svg>',
+    rain: '<svg viewBox="0 0 120 120" fill="none"><path d="M30 62h56a14 14 0 0 0 0-28 20 20 0 0 0-38-6 16 16 0 0 0-18 6 12 12 0 0 0 0 28z" fill="#ffffff" opacity="0.9"/><g stroke="#a8c8e8" stroke-width="5" stroke-linecap="round"><line x1="36" y1="76" x2="28" y2="94"/><line x1="56" y1="76" x2="48" y2="94"/><line x1="76" y1="76" x2="68" y2="94"/><line x1="96" y1="76" x2="88" y2="94"/></g></svg>',
+    snow: '<svg viewBox="0 0 120 120" fill="none"><path d="M30 56h56a14 14 0 0 0 0-28 20 20 0 0 0-38-6 16 16 0 0 0-18 6 12 12 0 0 0 0 28z" fill="#ffffff" opacity="0.9"/><g fill="#e8f3fa"><circle cx="34" cy="72" r="4"/><circle cx="60" cy="84" r="4"/><circle cx="86" cy="72" r="4"/><circle cx="47" cy="92" r="3"/><circle cx="73" cy="92" r="3"/></g></svg>',
+    bolt: '<svg viewBox="0 0 120 120" fill="none"><path d="M30 60h18l-8 44 36-56H56l8-36z" fill="#ffd166"/></svg>'
+  };
+
+  const $ = id => document.getElementById(id);
+  const inputEl = $("cityInput"), goBtn = $("goBtn"), locateBtn = $("locateBtn");
+  const cityNameEl = $("cityName"), taglineEl = $("tagline"), quoteEl = $("quote");
+  const motifEl = $("motif"), creditsEl = $("credits"), statusEl = $("status");
+  const skyLineEl = $("skyLine"), windLineEl = $("windLine"), humLineEl = $("humLine"), precipLineEl = $("precipLine");
+  const nerdsEl = $("nerds"), asofEl = $("asof"), copyBtn = $("copyBtn"), chipsEl = $("chips");
+
+  let current = null; /* last vibe payload, for copy */
+
+  /* quick city chips */
+  QUICK_CITIES.forEach(function (c) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.textContent = c.name;
+    b.addEventListener("click", function () { fetchWeather(c.lat, c.lon, c.name.toUpperCase()); });
+    chipsEl.appendChild(b);
+  });
+
+  function setStatus(msg, isErr) {
+    if (msg) { statusEl.hidden = false; statusEl.textContent = msg; statusEl.className = "status" + (isErr ? " err" : ""); }
+    else statusEl.hidden = true;
+  }
+
+  function applyPalette(p, cond, isNight) {
+    const root = document.documentElement.style;
+    root.setProperty("--bg1", p.bg1);
+    root.setProperty("--bg2", p.bg2);
+    root.setProperty("--ink", p.ink);
+    root.setProperty("--accent", p.accent);
+    const motif = (p.motif === "sun" && isNight && cond === "clear") ? "moon" : p.motif;
+    motifEl.innerHTML = MOTIFS[motif] || MOTIFS.sun;
+  }
+
+  async function fetchWeather(lat, lon, label) {
+    setStatus("Contacting the sky\u2026");
+    const url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon +
+      "&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&timezone=auto";
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const d = await r.json();
+      const c = d.current;
+      const w = {
+        temp: c.temperature_2m, feels: c.apparent_temperature, humidity: c.relative_humidity_2m,
+        wind: c.wind_speed_10m, code: c.weather_code, precip: c.precipitation, is_day: c.is_day === 1
+      };
+      const v = vibeFor(w);
+      current = { city: label, vibe: v, w: w, time: c.time };
+      render(current);
+      try { localStorage.setItem("vw-last", JSON.stringify({ lat: lat, lon: lon, label: label })); } catch (e) {}
+      setStatus(null);
+    } catch (err) {
+      setStatus("The sky is unreachable. Check your connection and try again.", true);
+    }
+  }
+
+  function render(item) {
+    const v = item.vibe;
+    cityNameEl.textContent = item.city;
+    taglineEl.textContent = v.tagline;
+    quoteEl.innerHTML = "It\u2019s \u201c<span class=\"marks\">" + v.quote + "</span>\u201d outside";
+    skyLineEl.textContent = v.sky;
+    windLineEl.textContent = v.wind;
+    humLineEl.textContent = v.humidity;
+    precipLineEl.textContent = "Precip: " + item.w.precip + " mm \u2014 " + v.precip;
+    nerdsEl.textContent = v.nerds;
+    creditsEl.hidden = false;
+    applyPalette(v.palette, v.cond, !item.w.is_day);
+    const t = item.time || "";
+    asofEl.textContent = "AS OF " + (t.length >= 16 ? t.slice(11, 16) : "\u2014") + " LOCAL";
+  }
+
+  async function searchCity(name) {
+    const q = name.trim();
+    if (!q) return;
+    setStatus("Locating \u201c" + q + "\u201d\u2026");
+    try {
+      const r = await fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(q) + "&count=1&language=en");
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const d = await r.json();
+      if (!d.results || d.results.length === 0) { setStatus("No such place. The sky has never heard of \u201c" + q + "\u201d.", true); return; }
+      const hit = d.results[0];
+      await fetchWeather(hit.latitude, hit.longitude, hit.name.toUpperCase());
+    } catch (err) {
+      setStatus("The sky is unreachable. Check your connection and try again.", true);
+    }
+  }
+
+  function locate() {
+    if (!navigator.geolocation) { setStatus("Your browser is hiding your location. Search a city instead.", true); return; }
+    setStatus("Asking the sky where you are\u2026");
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        const lat = pos.coords.latitude, lon = pos.coords.longitude;
+        /* best-effort reverse geocode for a nice label; fall back to coordinates */
+        fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + lat + "&longitude=" + lon + "&localityLanguage=en")
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            const city = (d.city || d.locality || d.principalSubdivision || "").toUpperCase();
+            fetchWeather(lat, lon, city || "YOUR LOCATION");
+          })
+          .catch(function () { fetchWeather(lat, lon, "YOUR LOCATION"); });
+      },
+      function () { setStatus("Location denied. The sky respects your privacy, but now it can\u2019t brag about you.", true); },
+      { timeout: 8000 }
+    );
+  }
+
+  goBtn.addEventListener("click", function () { searchCity(inputEl.value); });
+  inputEl.addEventListener("keydown", function (e) { if (e.key === "Enter") searchCity(inputEl.value); });
+  locateBtn.addEventListener("click", locate);
+
+  copyBtn.addEventListener("click", function () {
+    if (!current) return;
+    const v = current.vibe;
+    const text = "VIBE REPORT \u2014 " + current.city + "\n====================\n" +
+      "It\u2019s \u201c" + v.quote + "\u201d outside (" + current.city + ")\n" +
+      "Tagline: " + v.tagline + "\n" +
+      "Sky: " + v.sky + "\nWind: " + v.wind + "\nHumidity: " + v.humidity + "\n" +
+      "Precip: " + current.w.precip + " mm \u2014 " + v.precip + "\n\n" +
+      v.nerds + "\n\n\u2014 generated by vibeweather (no degrees. only vibes.)";
+    try {
+      navigator.clipboard.writeText(text).then(function () {
+        copyBtn.textContent = "Copied \u2713";
+        setTimeout(function () { copyBtn.textContent = "Copy Vibe"; }, 1500);
+      });
+    } catch (e) {}
+  });
+
+  /* boot: saved city first, else try geolocation */
+  let booted = false;
+  try {
+    const saved = JSON.parse(localStorage.getItem("vw-last") || "null");
+    if (saved && saved.lat) { fetchWeather(saved.lat, saved.lon, saved.label); booted = true; }
+  } catch (e) {}
+  if (!booted) locate();
+})();
+</script>
+</body>
+</html>
