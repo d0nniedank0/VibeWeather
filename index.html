@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VibeWeather — No Degrees. Only Vibes.</title>
 <meta name="description" content="A weather app that never tells you the temperature. Real weather, translated into vibes. Powered by Open-Meteo, 100% free.">
+<meta name="theme-color" content="#f2a65a">
+<meta property="og:title" content="VibeWeather — No Degrees. Only Vibes.">
+<meta property="og:description" content="A weather app that never tells you the temperature. Real weather, translated into vibes. Powered by Open-Meteo, 100% free.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://vibeweather.pages.dev/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><circle cx=%2232%22 cy=%2232%22 r=%2218%22 fill=%22%23e9a13b%22/><g stroke=%22%23e9a13b%22 stroke-width=%224%22 stroke-linecap=%22round%22><line x1=%2232%22 y1=%226%22 x2=%2232%22 y2=%2212%22/><line x1=%2232%22 y1=%2252%22 x2=%2232%22 y2=%2258%22/><line x1=%226%22 y1=%2232%22 x2=%2212%22 y2=%2232%22/><line x1=%2252%22 y1=%2232%22 x2=%2258%22 y2=%2232%22/><line x1=%2213.9%22 y1=%2213.9%22 x2=%2218.1%22 y2=%2218.1%22/><line x1=%2245.9%22 y1=%2245.9%22 x2=%2250.1%22 y2=%2250.1%22/><line x1=%2213.9%22 y1=%2250.1%22 x2=%2218.1%22 y2=%2245.9%22/><line x1=%2245.9%22 y1=%2218.1%22 x2=%2250.1%22 y2=%2213.9%22/></g></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -442,6 +447,9 @@ const QUICK_CITIES = [
     root.setProperty("--bg2", p.bg2);
     root.setProperty("--ink", p.ink);
     root.setProperty("--accent", p.accent);
+    /* browser chrome follows the sky */
+    const tc = document.querySelector('meta[name="theme-color"]');
+    if (tc) tc.setAttribute("content", p.bg1);
     const motif = (p.motif === "sun" && isNight && cond === "clear") ? "moon" : p.motif;
     motifEl.innerHTML = MOTIFS[motif] || MOTIFS.sun;
   }
