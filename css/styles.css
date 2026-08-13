@@ -1,0 +1,137 @@
+
+  :root {
+    /* palette is set at runtime from live weather */
+    --bg1: #f2a65a;
+    --bg2: #f7d794;
+    --ink: #2b2118;
+    --accent: #b5431f;
+    --muted: rgba(43, 33, 24, 0.62);
+    --display: "Anton", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --type: "Courier Prime", "Courier New", Courier, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; }
+  body {
+    font-family: var(--type);
+    background: linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background 0.8s ease, color 0.8s ease;
+  }
+  a { color: var(--accent); }
+
+  /* ---------- station header ---------- */
+  header.station {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    padding: 14px 22px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .station-name { font-size: 13px; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; }
+  .station-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .search-wrap { display: flex; gap: 6px; }
+  input[type="text"] {
+    font-family: var(--type); font-size: 13px;
+    padding: 9px 12px;
+    background: rgba(255,255,255,0.35);
+    border: 1.5px solid var(--ink);
+    border-radius: 2px;
+    color: var(--ink);
+    min-height: 40px;
+    width: 170px;
+  }
+  input[type="text"]:focus { outline: none; box-shadow: 0 0 0 2px var(--accent); }
+  input[type="text"]::placeholder { color: var(--muted); }
+  button {
+    font-family: var(--type); font-size: 12.5px; letter-spacing: 1px; text-transform: uppercase;
+    font-weight: 700;
+    min-height: 40px; padding: 8px 14px;
+    background: var(--ink); color: var(--bg2);
+    border: 1.5px solid var(--ink); border-radius: 2px;
+    cursor: pointer;
+    transition: opacity 0.12s ease;
+  }
+  button:hover { opacity: 0.82; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button:active { transform: translateY(1px); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    font-size: 11.5px; letter-spacing: 1px;
+    min-height: 34px; padding: 6px 11px;
+    background: transparent;
+    border: 1.5px solid var(--ink);
+    color: var(--ink);
+  }
+  @media (max-width: 700px) {
+    header.station { justify-content: center; text-align: center; }
+    input[type="text"] { width: 100%; }
+  }
+
+  /* ---------- poster ---------- */
+  main.poster {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 40px 24px 30px;
+    max-width: 1000px; margin: 0 auto; width: 100%;
+  }
+  .motif { width: 170px; height: 170px; margin-bottom: 18px; }
+  .motif svg { width: 100%; height: 100%; }
+  .visit {
+    font-family: var(--display);
+    font-size: clamp(52px, 11vw, 128px);
+    line-height: 0.98;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .visit .city { color: var(--accent); }
+  .tagline {
+    margin-top: 12px;
+    font-size: clamp(15px, 2.4vw, 22px);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .quote {
+    margin-top: 26px;
+    font-size: clamp(16px, 2.6vw, 24px);
+    font-style: italic;
+    max-width: 640px;
+    line-height: 1.5;
+  }
+  .quote .marks { color: var(--accent); font-style: normal; font-weight: 700; }
+  .credits {
+    margin-top: 34px;
+    display: flex; gap: 26px; flex-wrap: wrap; justify-content: center;
+    font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--ink);
+    border-top: 2px solid var(--ink);
+    padding-top: 18px;
+    max-width: 760px; width: 100%;
+  }
+  .credits .cr { display: flex; flex-direction: column; gap: 2px; min-width: 130px; }
+  .credits .cr .k { color: var(--muted); font-size: 10px; letter-spacing: 2.5px; }
+  .credits .cr .v { font-weight: 700; }
+  .nerds {
+    margin-top: 20px;
+    font-size: 11.5px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .status { margin-top: 26px; font-size: 15px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
+  .status.err { color: var(--accent); }
+
+  /* ---------- footer ---------- */
+  footer {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    padding: 12px 22px;
+    border-top: 2px solid var(--ink);
+    font-size: 11.5px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--ink);
+  }
+  footer .asof { color: var(--muted); }
+  footer button { min-height: 34px; padding: 6px 12px; font-size: 11px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }

@@ -24,7 +24,12 @@ Powered by [Open-Meteo](https://open-meteo.com) — free, no API key, no signup,
 
 ## Development
 
-Single self-contained `index.html` — inline CSS + JS, zero build step, zero runtime dependencies (fonts aside). The vibe engine is DOM-free and unit-tested.
+Clean split structure, no build step — Cloudflare Pages serves it as-is:
+
+- `index.html` — markup + head (hub-readiness tags)
+- `css/styles.css` — all styles
+- `js/engine.js` — the DOM-free vibe engine (unit-tested)
+- `js/app.js` — the UI layer
 
 ```bash
 # engine tests (bands, boundaries, matrix coverage, palettes)
